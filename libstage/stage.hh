@@ -1138,8 +1138,10 @@ namespace Stg
 	object, read the file and configure the world from the
 	contents, creating models as necessary. The created object
 	persists, and can be retrieved later with
-	World::GetWorldFile(). */
-    virtual void Load( const std::string& worldfile_path );
+	World::GetWorldFile().
+	@returns true if load was successful, false otherwise
+	*/
+    virtual bool Load( const std::string& worldfile_path );
 
     virtual void UnLoad();
 
@@ -1567,7 +1569,7 @@ namespace Stg
 
     virtual std::string ClockString() const;
     virtual bool Update();	
-    virtual void Load( const std::string& filename );
+    virtual bool Load( const std::string& filename );
     virtual void UnLoad();
     virtual bool Save( const char* filename );	
     virtual bool IsGUI() const { return true; };	
@@ -2749,6 +2751,9 @@ namespace Stg
       Size size;
       Bounds range;
       radians_t fov;
+      double angle_noise;			//< variance for ranger angle
+      double range_noise;			//< variance for range readings
+      double range_noise_const;		//< fariance for constant noise (not depending on range)
       unsigned int sample_count;
       Color color;
 			
@@ -2759,7 +2764,10 @@ namespace Stg
       Sensor() : pose( 0,0,0,0 ), 
 		 size( 0.02, 0.02, 0.02 ), // teeny transducer
 		 range( 0.0, 5.0 ),
-		 fov( 0.1 ), 
+		 fov( 0.1 ),
+		 angle_noise(0.0),
+		 range_noise(0.0),
+		 range_noise_const(0.0),
 		 sample_count(1),
 		 color( Color(0,0,1,0.15)),
 		 ranges(),
