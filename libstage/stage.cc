@@ -88,31 +88,34 @@ double direction(double a)
     return sgn(a);
 }
 
-int Stg::polys_from_image_file(const std::string &filename,
-                               std::vector<std::vector<point_t> > &polys)
+int Stg::polys_from_image_file(const std::string &filename, bitmap_geom_t& geom)
 {
   // TODO: make this a parameter
   const int threshold = 127;
 
   Image img;
 
-  //SDL_Surface * img = SDL_LoadBMP("image.bmp");
-
-  //Fl_Shared_Image *img = Fl_Shared_Image::get(filename.c_str());
   if (!img.load(filename.c_str())) {
     std::cerr << "failed to open file: " << filename << std::endl;
 
-    //assert(img); // easy access to this point in debugger
     exit(-1);
   }
 
   // printf( "loaded image %s w %d h %d d %d count %d ld %d\n",
   //  filename, img->w(), img->h(), img->d(), img->count(), img->ld() );
 
-  const unsigned int width = img.getWidth();
-  const unsigned height = img.getHeight();
-  const unsigned int depth = img.getDepth();
+  uint32_t width = img.getWidth();
+  uint32_t height = img.getHeight();
+  uint32_t depth = img.getDepth();
   uint8_t *pixels = (uint8_t *)img.getData();
+
+  geom.width = width;
+  geom.height = height;
+
+  geom.x.min = width;
+  geom.x.max = 0;
+  geom.y.min = height;
+  geom.y.max = 0;
 
   // a set of previously seen directed edges, The key is a 4-element vector
   // [x1,y1,x2,y2].
@@ -120,8 +123,14 @@ int Stg::polys_from_image_file(const std::string &filename,
 
   for (unsigned int y = 0; y < height; y++) {
     for (unsigned int x = 0; x < width; x++) {
+    	// We add corners to the map. It ensures map is not deformed.
+    	bool is_corner = (x == 0 && y ==0) ||
+    			(x == width-1 && y == 0) ||
+					(x == width-1 && y == height-1) ||
+					(x == 0 && y == height-1);
+
       // skip blank (white) pixels
-      if (pixel_is_set(pixels, width, depth, x, y, threshold))
+      if (pixel_is_set(pixels, width, depth, x, y, threshold) && !is_corner)
         continue;
 
       // generate the four directed edges for this pixel
@@ -166,8 +175,19 @@ int Stg::polys_from_image_file(const std::string &filename,
         else // inverse found! delete it
           edges.erase(it);
       }
+
+      if (x < geom.x.min)
+      	geom.x.min = x;
+      if (x > geom.x.max)
+      	geom.x.max = x;
+      if (-y < geom.y.min)
+      	geom.y.min = -y;
+      if (-y > geom.y.max)
+      	geom.y.max = -y;
     }
   }
+
+
 
   std::multimap<point_t, point_t> mmap;
 
@@ -215,11 +235,9 @@ int Stg::polys_from_image_file(const std::string &filename,
       seedit = mmap.find(next);
     }
 
-    polys.push_back(poly);
+    geom.polys.push_back(poly);
   }
 
-  //if (img)
-  //  img->release(); // frees all resources for this image
   return 0; // ok
 }
 

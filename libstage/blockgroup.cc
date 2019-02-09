@@ -315,15 +315,16 @@ void BlockGroup::LoadBitmap(const std::string &bitmapfile, Worldfile *wf)
 
   Color col(1.0, 0.0, 1.0, 1.0);
 
-  std::vector<std::vector<point_t> > polys;
-
-  if (polys_from_image_file(full, polys)) {
+  bitmap_geom_t geom;
+  if (polys_from_image_file(full, geom)) {
     PRINT_ERR1("failed to load polys from image file \"%s\"", full.c_str());
     return;
   }
 
-  FOR_EACH (it, polys)
-    AppendBlock(Block(this, *it, Bounds(0, 1)));
+  for (const auto& poly: geom.polys)
+    AppendBlock(Block(this, poly, Bounds(0, 1)));
+
+  bounds3d_t bounds(Bounds(0, geom.width), Bounds(-geom.height, 0), Bounds(0, 1));
 
   CalcSize();
 

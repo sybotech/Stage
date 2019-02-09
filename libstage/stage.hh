@@ -553,9 +553,19 @@ typedef struct {
   Size size;
 } rotrect_t; /// rotated rectangle
 
+typedef struct {
+	std::vector<std::vector<point_t> > polys;
+	/// Size of the bitmap.
+	int width;
+	int height;
+	/// Actual geometry bounds in image space.
+	Bounds x;
+	Bounds y;
+} bitmap_geom_t;
+
 /** load the image file [filename] and convert it to a vector of polygons
    */
-int polys_from_image_file(const std::string &filename, std::vector<std::vector<point_t> > &polys);
+int polys_from_image_file(const std::string &filename, bitmap_geom_t& geom);
 
 /** matching function should return true iff the candidate block is
       stops the ray, false if the block transmits the ray
